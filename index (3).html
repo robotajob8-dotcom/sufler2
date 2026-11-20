@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Суфлёр — выучи стих с подсказками</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Nunito:wght@700;800;900&display=swap">
+<style>
+:root{color-scheme:light dark;--bg:#fff;--card:#fff;--ink:#1F2A44;--mut:#7A869E;--line:#E3E9F3;--soft:#F3F6FB;--blue:#2F6BFF;--blueD:#1F49C4;--orange:#FF8A1F;--yel:#FFE27A;--red:#F2455A;--mint:#22C58B;--ui:'Nunito',system-ui,sans-serif;--ser:'Literata',Georgia,serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#121A2E;--card:#121A2E;--ink:#EDF1FA;--mut:#8D9AB8;--line:#26334F;--soft:#1A2540}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-weight:700}
+body{min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.item:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.app{max-width:520px;margin:0 auto;padding:16px 20px 24px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.logo{font:900 26px var(--ui);color:var(--blue)}
+#hs{font:700 13px var(--ui);color:var(--mut);margin-top:2px}
+#hs.risk{color:var(--red)}
+.tr{display:flex;gap:8px;align-items:center}
+.stk{display:flex;gap:6px;align-items:center;font:900 19px var(--ui);padding:6px 4px}
+.stk.on{color:var(--orange)}
+.stk.dead{color:var(--mut)}
+.stk.dead .f{filter:grayscale(1) opacity(.5)}
+.stk.risk{color:var(--red)}
+.gear{width:40px;height:40px;border-radius:50%;font-size:20px;color:var(--mut)}
+.catrow{display:flex;align-items:center;gap:12px;margin:16px 0 8px}
+.cat{position:relative;width:70px;height:80px;flex:none;cursor:pointer}
+.cat img{display:block;width:100%;height:100%;object-fit:contain;transform-origin:50% 100%;animation:bob 3.5s ease-in-out infinite;transition:filter .3s,transform .3s}
+@keyframes bob{50%{transform:translateY(-3px) rotate(-1.5deg)}}
+.cat[data-s=smug] img{animation:none;transform:rotate(-6deg)}
+.cat[data-s=judge] img{animation:none;transform:scale(1.06);filter:contrast(1.1)}
+.cat[data-s=sulk] img{animation:none;transform:rotate(8deg) translateX(6px);filter:grayscale(.6) brightness(.9)}
+.cat[data-s=sleep] img{animation:none;filter:brightness(.75) saturate(.8)}
+.cat[data-s=sleep]::after{content:'Zzz';position:absolute;right:-8px;top:-4px;font:900 14px var(--ui);color:var(--blue);animation:zz 2s ease-in-out infinite}
+@keyframes zz{50%{transform:translateY(-5px)}}
+.cat[data-s=party] img{animation:pt .5s ease-in-out infinite}
+.cat[data-s=party]::after{content:'✨';position:absolute;right:-10px;top:-6px;font-size:18px}
+@keyframes pt{50%{transform:translateY(-8px)}}
+.bubble{position:relative;flex:1;border:2px solid var(--line);border-radius:16px;padding:10px 14px;font:700 15px/1.35 var(--ui)}
+.bubble::before{content:'';position:absolute;left:-8px;top:50%;margin-top:-7px;width:12px;height:12px;background:var(--bg);border-left:2px solid var(--line);border-bottom:2px solid var(--line);transform:rotate(45deg)}
+.bubble.show{animation:fi .3s ease-out}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.fill{width:var(--w)}}
+.sec{font:900 13px var(--ui);color:var(--mut);letter-spacing:.08em;margin:22px 0 10px}
+#list{margin-bottom:84px}
+.item{display:flex;gap:12px;align-items:center;border:2px solid var(--line);border-bottom-width:4px;border-radius:16px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.item:active{transform:translateY(2px);border-bottom-width:2px}
+.item.last{border-color:var(--blue)}
+.item .t{flex:1;min-width:0}
+.item b{display:block;font:900 17px/1.25 var(--ui)}
+.item small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+.item small.od{color:var(--orange)}
+.bar{position:relative;height:8px;border-radius:99px;background:var(--soft);margin-top:10px;overflow:hidden}
+.fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:var(--blue);transition:width .8s cubic-bezier(.2,1,.3,1)}
+.bar.gold .fill{background:var(--orange)}
+.lost{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,var(--line) 0 3px,transparent 3px 6px)}
+.side{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.side em{font:900 15px var(--ui);font-style:normal;color:var(--mut)}
+.x{color:var(--mut);width:32px;height:28px;font-size:18px;line-height:1}
+.cta{position:sticky;bottom:0;margin:0 -20px;padding:16px 20px;background:linear-gradient(to top,var(--bg) 70%,transparent);z-index:5}
+.add{width:100%;height:56px;background:var(--blue);color:#fff;border-radius:16px;border-bottom:4px solid var(--blueD);font:900 16px var(--ui);text-transform:uppercase;letter-spacing:.05em}
+.add:active{transform:translateY(3px);border-bottom-width:1px}
+.btn{background:var(--blue);color:#fff;font:900 13px var(--ui);text-transform:uppercase;letter-spacing:.04em;padding:13px 16px;border-radius:14px;border-bottom:4px solid var(--blueD)}
+.btn:active{transform:translateY(3px);border-bottom-width:1px}
+.btn.alt{background:var(--bg);color:var(--ink);border:2px solid var(--line);border-bottom-width:4px}
+.btn.on{background:var(--yel);color:#1F2A44;border-color:#E6C84C}
+.btn.danger{background:var(--bg);color:var(--red);border:2px solid var(--line);border-bottom-width:4px}
+.hide{display:none!important}
+.bk{font:900 14px var(--ui);padding:10px 0;color:var(--blue)}
+.modes{display:flex;gap:2px;background:var(--soft);border-radius:14px;padding:3px;margin:8px 0}
+.modes button{flex:1;padding:10px 2px;border-radius:11px;font:800 12px var(--ui);color:var(--mut)}
+.modes button.on{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px #0002}
+.desc{color:var(--mut);font:700 14px/1.4 var(--ui);margin:0 2px 12px;min-height:2.8em}
+.text{border:2px solid var(--line);border-radius:20px;padding:20px 18px;font-family:var(--ser);font-weight:400;font-size:21px;line-height:1.9;min-height:300px}
+.text .ln{display:block}
+.text .ln.pg{margin-top:1em}
+.w{transition:color .25s,opacity .25s,background .25s;padding:2px 4px;border-radius:7px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.w.done{opacity:.38}
+.w.cur{background:var(--yel);color:#1F2A44;font-weight:600}
+.text.blind .w.fut{color:transparent;border-bottom:2px solid var(--line);user-select:none;border-radius:0}
+.text.blind .w.cur:not(.shown){background:none;color:transparent;border-bottom:3px solid var(--blue);border-radius:0}
+.w.hid,.w.fl{color:transparent;border-bottom:2px solid var(--mut);border-radius:0;cursor:pointer}
+.w.fl b{color:var(--ink);font-weight:inherit}
+.flag{color:var(--line);font-size:16px;padding:2px 8px;vertical-align:middle}
+.flag.on{color:var(--orange)}
+.empty{color:var(--mut);font:700 14px var(--ui)}
+.status{display:flex;align-items:center;justify-content:center;gap:8px;text-align:center;color:var(--mut);font:700 14px/1.4 var(--ui);min-height:2.8em;margin-top:12px}
+.status::before{content:'';flex:none;width:9px;height:9px;border-radius:50%;background:var(--line)}
+.status.say::before{background:#4DA3FF}
+.status.listen::before{background:var(--mint)}
+.status.wait::before{background:var(--orange)}
+.status.err::before{background:var(--red)}
+.ctl{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 6px}
+.lctl{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:12px 0 6px}
+.mic{width:76px;height:76px;border-radius:50%;background:var(--blue);color:#fff;font-size:30px;border-bottom:5px solid var(--blueD)}
+.mic:active{transform:translateY(4px);border-bottom-width:1px}
+.mic.live{animation:ring2 1.4s ease-out infinite}
+@keyframes ring2{from{box-shadow:0 0 0 0 #2F6BFF77}to{box-shadow:0 0 0 18px #2F6BFF00}}
+.sm{width:50px;height:50px;border-radius:50%;border:2px solid var(--line);border-bottom-width:4px;font-size:18px}
+.sm:active{transform:translateY(2px);border-bottom-width:2px}
+.sheet{position:fixed;inset:0;background:#0A1230aa;display:flex;align-items:flex-end;justify-content:center;z-index:30}
+.sheet>div{background:var(--bg);width:100%;max-width:520px;border-radius:24px 24px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px));max-height:90vh;overflow:auto}
+.sheet b{font:900 20px var(--ui)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0;font:700 15px var(--ui)}
+.row input[type=range]{width:46%;accent-color:var(--blue)}
+.row input[type=checkbox]{width:26px;height:26px;accent-color:var(--blue)}
+select,input[type=text],textarea{font:700 16px var(--ui);color:var(--ink);background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:12px;width:100%}
+textarea{min-height:200px;margin-top:10px;font-family:var(--ser);font-weight:400}
+.row select{width:auto;max-width:58%}
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;z-index:40;font:800 14px var(--ui);max-width:90%;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><div><div class="logo">Суфлёр</div><div id="hs"></div></div><div class="tr"><div class="stk" id="stk"><span class="f">🔥</span><span id="sn">0</span></div><button class="gear" id="setb" aria-label="Настройки">⚙</button></div></div>
+
+<section id="home">
+  <div class="catrow"><div class="cat" id="cat" data-s="calm" role="img" aria-label="Кот-суфлёр"><img src="cat.png" alt="" width="174" height="200" draggable="false"></div><div class="bubble" id="bub" role="status" aria-live="polite"></div></div>
+  <div class="sec">МОИ ТЕКСТЫ</div>
+  <div id="list"></div>
+  <div class="cta"><button class="add" id="addb">+ Вставить свой текст</button></div>
+</section>
+
+<section id="play" class="hide">
+  <button class="bk" id="back">← Назад</button>
+  <div style="font-family:var(--ser);font-size:22px;font-weight:600;margin:4px 4px 0" id="ttl"></div>
+  <div class="modes" id="modes">
+    <button data-m="echo" class="on">Эхо</button><button data-m="prompt">Суфлёр</button><button data-m="radio">Радио</button><button data-m="learn">Заучивание</button>
+  </div>
+  <p class="desc" id="desc"></p>
+  <div class="text" id="txt"></div>
+  <div class="status" id="st" role="status" aria-live="polite"></div>
+  <div class="ctl" id="ctl">
+    <button class="sm" id="prev" aria-label="Предыдущий кусок">⏮</button>
+    <button class="sm" id="rep" aria-label="Повторить кусок">🔁</button>
+    <button class="mic" id="mic" aria-label="Старт">🎙</button>
+    <button class="sm" id="next" aria-label="Следующий кусок">⏭</button>
+  </div>
+  <div class="lctl hide" id="lctl">
+    <button class="btn alt" id="easy">Легче</button><button class="btn" id="hard">Сложнее</button><button class="btn alt" id="hint">Подсказать</button>
+    <button class="btn alt" id="honly">⚑ Сложные</button><button class="btn alt" id="learned">Выучил ✓</button>
+  </div>
+</section>
+</div>
+
+<div class="sheet hide" id="set"><div>
+  <b style="font-size:18px">Настройки</b>
+  <div class="row"><label for="rate">Скорость чтения</label><input type="range" id="rate" min="0.6" max="1.5" step="0.1"></div>
+  <div class="row"><label for="chunk">Размер куска</label><select id="chunk">
+    <option value="1">1 слово</option><option value="2">2 слова</option><option value="3">3 слова</option><option value="5">5 слов</option>
+    <option value="line">Строка</option><option value="sent">Предложение</option><option value="para">Абзац / четверостишие</option></select></div>
+  <div class="row"><label for="pause">Подсказка через (сек)</label><input type="range" id="pause" min="2" max="10" step="1"></div>
+  <div class="row"><label for="repeat">Ждать, пока я повторю</label><input type="checkbox" id="repeat"></div>
+  <div class="row"><label for="auto">Автоподсказка в заучивании</label><input type="checkbox" id="auto"></div>
+  <div class="row"><label for="mild">Кот без яда</label><input type="checkbox" id="mild"></div>
+  <button class="btn danger hide" style="width:100%;margin-bottom:8px" id="r1">Сбросить прогресс этого текста</button>
+  <button class="btn danger" style="width:100%;margin-bottom:8px" id="rall">Сбросить весь прогресс и серию</button>
+  <button class="btn" style="width:100%" id="setx">Готово</button>
+</div></div>
+
+<div class="sheet hide" id="new"><div>
+  <b style="font-size:18px" id="nh">Свой текст</b>
+  <input type="text" id="nt" placeholder="Название" style="margin-top:10px">
+  <textarea id="nb" placeholder="Вставь стих или речь. Каждая строка с новой строки, абзацы разделяй пустой строкой."></textarea>
+  <button class="btn danger hide" style="width:100%;margin-top:10px" id="nd">Удалить текст</button>
+  <div class="row"><button class="btn alt" id="nx">Отмена</button><button class="btn" id="ns">Сохранить</button></div>
+</div></div>
+
+<script>
+const LIB=[
+{id:'p1',t:'У Лукоморья дуб зелёный',a:'А. С. Пушкин',b:`У лукоморья дуб зелёный;
+Златая цепь на дубе том:
+И днём и ночью кот учёный
+Всё ходит по цепи кругом;
+Идёт направо — песнь заводит,
+Налево — сказку говорит.
+Там чудеса: там леший бродит,
+Русалка на ветвях сидит;`},
+{id:'l1',t:'Парус',a:'М. Ю. Лермонтов',b:`Белеет парус одинокой
+В тумане моря голубом!..
+Что ищет он в стране далёкой?
+Что кинул он в краю родном?..
+Играют волны — ветер свищет,
+И мачта гнётся и скрипит...
+Увы! он счастия не ищет
+И не от счастия бежит!
+
+Под ним струя светлей лазури,
+Над ним луч солнца золотой...
+А он, мятежный, просит бури,
+Как будто в бурях есть покой!`},
+{id:'p2',t:'Я вас любил',a:'А. С. Пушкин',b:`Я вас любил: любовь ещё, быть может,
+В душе моей угасла не совсем;
+Но пусть она вас больше не тревожит;
+Я не хочу печалить вас ничем.
+
+Я вас любил безмолвно, безнадежно,
+То робостью, то ревностью томим;
+Я вас любил так искренно, так нежно,
+Как дай вам Бог любимой быть другим.`}];
+const DESC={echo:'Приложение говорит кусок — ты повторяешь. Дальше идём, когда услышим тебя.',prompt:'Читай сам по памяти. Если замолчал, суфлёр подскажет следующие слова.',radio:'Стих читается сам, по кругу. Включи, когда скучно или засыпаешь.',learn:'Слова постепенно пропадают. Нажми на пропуск, чтобы подсмотреть, отметь ⚑ сложные строки.'};
+const LV=['Весь текст','Часть слов скрыта','Только первые буквы','Почти всё скрыто','Всё скрыто'];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const day=d=>{const x=new Date(d||Date.now());return x.getFullYear()+'-'+(x.getMonth()+1)+'-'+x.getDate()};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const never=()=>new Promise(()=>{});
+let S={streak:0,last:'',days:[],texts:[],prog:{},hard:{},lastp:{},lastOpen:'',lastAdd:'',best:0,mild:false,react:'',rate:1,chunk:'3',pause:4,rep:true,autoHint:false};
+try{Object.assign(S,JSON.parse(localStorage.getItem('sufler')||'{}'))}catch(e){}
+S.chunk=String(S.chunk);S.hard=S.hard||{};S.lastp=S.lastp||{};
+const save=()=>{try{localStorage.setItem('sufler',JSON.stringify(S))}catch(e){}};
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+let cur,mode='echo',run=0,idx=0,words=[],chunks=[],rec=null,hintT=null,maxT=null,learnT=null,shown=false,level=1,onlyHard=false,playing=false,micDead=false,editId=null,radioDone=false,wl=null;
+const reveal=new Set();
+
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2600)}
+function setSt(k,m){const e=$('#st');e.className='status '+k;e.textContent=m}
+const streakNow=()=>(S.last===day()||S.last===day(Date.now()-864e5))?S.streak:0;
+function plural(n){return n+' '+((n%10===1&&n%100!==11)?'день':((n%10>1&&n%10<5&&(n%100<10||n%100>20))?'дня':'дней'))}
+
+const HUE=[[122,43,255],[255,106,0],[255,230,0]];
+const gcol=t=>{const s=t*2,i=Math.min(1,Math.floor(s)),f=s-i,a=HUE[i],b=HUE[i+1];return 'rgb('+a.map((v,k)=>Math.round(v+(b[k]-v)*f)).join(',')+')'};
+const sod=t=>{const d=new Date(t);d.setHours(0,0,0,0);return d.getTime()};
+const dayDiff=ts=>Math.round((sod(Date.now())-sod(ts))/864e5);
+const lastDate=()=>{const[y,m,d]=S.last.split('-').map(Number);return new Date(y,m-1,d).getTime()};
+function bar(id){
+  const p=S.prog[id]||0,f=Math.round(p/100*20),dd=S.lastp[id]?dayDiff(S.lastp[id]):0,lost=p>=100?0:Math.min(f,Math.max(0,dd-1)*2),k=f-lost;
+  return `<div class="bar${p>=100?' gold':''}"><div class="lost" style="left:${k*5}%;width:${lost*5}%"></div><div class="fill" style="--w:${k*5}%" data-w="${k*5}"></div></div>`;
+}
+function streakUI(){
+  const n=streakNow(),done=S.last===day(),hr=new Date().getHours(),risk=!done&&n>0&&hr>=18;
+  $('#sn').textContent=n;$('#stk').className='stk '+(done?'on':risk?'risk':n>0?'warm':'dead');
+  let m;
+  if(risk){const e=new Date();e.setHours(24,0,0,0);const s=Math.max(0,Math.floor((e-Date.now())/1000));m='Погаснет через '+String(Math.floor(s/3600)).padStart(2,'0')+':'+String(Math.floor(s%3600/60)).padStart(2,'0')}
+  else if(done)m='День '+n+'. Не порть.';
+  else if(n>0)m=n+'. Пока живой.';
+  else m='0. Впечатляюще.';
+  $('#hs').textContent=m;$('#hs').className=risk?'risk':'';
+}
+setInterval(streakUI,30000);
+function home(){
+  streakUI();
+  $('#list').innerHTML=[...LIB,...S.texts].map(x=>{
+    const p=S.prog[x.id]||0,od=(p>0&&S.lastp[x.id]&&p<100)?dayDiff(S.lastp[x.id]):0;
+    return `<div class="item${od>=1?'':(S.lastOpen===x.id?' last':'')}" role="button" tabindex="0" data-id="${esc(x.id)}"><div class="t"><b>${esc(x.t)}</b><small${od>=1?' class="od"':''}>${esc(x.a||'Мой текст')}${od>=1?' · не повторял '+od+' дн.':''}</small>${bar(x.id)}</div><div class="side"><em>${p}%</em>${x.c?`<button class="x" data-edit="${esc(x.id)}" aria-label="Изменить или удалить">⋯</button>`:''}</div></div>`;
+  }).join('');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.querySelectorAll('#list .fill').forEach(e=>e.style.width=e.dataset.w+'%')));
+}
+
+const PH={
+ miss1:['О, живой. А огонёк нет.','Вернулся? Серия не дождалась.'],
+ miss2:['Я не злюсь. Я просто считаю.','Два дня. Стих уже забыл тебя.'],
+ miss3:['Стих сам себя не выучит. Я проверял. Три дня.','Ты где был? Я тут сижу. Один.'],
+ risk:['До полуночи {h} ч. Я не волнуюсь. Это не я теряю {n} дн.','Огонёк дышит на ладан. Одна строчка.'],
+ first:['Ну давай, удиви меня.'],
+ done:['Сегодня зачёт. Завтра снова.','Норм. Не расслабляйся.'],
+ night:['Zzz… Иди спать. Стих подождёт.'],
+ learned:['Ладно. Допустим, это было неплохо.'],
+ record:['{n} дней. Я впечатлён. Не привыкай.'],
+ slap:['Хватит тыкать. Иди учи.'],
+ warm:['Сегодня ещё не было. Я заметил.']};
+const SOFT={
+ miss1:['С возвращением! Начнём с одной строчки?'],miss2:['Давно не виделись. Вернёмся к стиху?'],miss3:['Скучал! Один маленький стих, и мы в игре.'],
+ risk:['Серия ждёт до полуночи. Одна строчка!'],first:['Привет! Вставь текст, и начнём.'],done:['Отлично, на сегодня всё!'],night:['Zzz… Пора спать.'],
+ learned:['Выучено! Молодец!'],record:['Новый рекорд: {n} дн.! Так держать!'],slap:['Ой, щекотно! Давай учиться.'],warm:['Сегодня ещё не занимались. Давай?']};
+let catT=null,lastSay=0,saidN=0,taps=[];
+const IDLE=()=>S.mild?'Что учим сегодня?':'Ну что, чему сегодня не научимся?';
+function catSay(k,state,v,force){
+  v=v||{};const now=Date.now(),c=$('#cat');if(!c||!c.offsetParent)return;
+  if(!force&&(now-lastSay<20000||saidN>=3))return;
+  lastSay=now;saidN++;
+  const a=(S.mild?SOFT:PH)[k];
+  $('#bub').textContent=a[Math.floor(Math.random()*a.length)].replace('{h}',v.h||'').replace('{n}',v.n||'');
+  $('#bub').classList.remove('show');void $('#bub').offsetWidth;$('#bub').classList.add('show');c.dataset.s=S.mild&&state==='judge'?'calm':state;
+  clearTimeout(catT);catT=setTimeout(()=>{$('#bub').classList.remove('show');$('#bub').textContent=IDLE();c.dataset.s=new Date().getHours()<6?'sleep':'calm'},8000);
+}
+function catGreet(){
+  const c=$('#cat');if(!c)return;
+  c.dataset.s=new Date().getHours()<6?'sleep':'calm';$('#bub').textContent=IDLE();
+  if(S.react){const r=S.react;S.react='';save();setTimeout(()=>catSay(r==='record'?'record':'learned','party',{n:S.streak},true),500);return}
+  setTimeout(()=>{
+    const hr=new Date().getHours(),diff=S.last?dayDiff(lastDate()):null;
+    if(hr<6)return catSay('night','sleep');
+    if(diff===null)return catSay('first','calm');
+    if(diff===0)return catSay('done','calm');
+    if(diff===1)return hr>=18?catSay('risk','judge',{h:24-hr,n:S.streak}):catSay('warm','smug');
+    const m=diff-1;m===1?catSay('miss1','smug'):m===2?catSay('miss2','judge'):catSay('miss3','sulk');
+  },1200);
+}
+function catInit(){
+  $('#cat').onclick=()=>{const n=Date.now();taps=taps.filter(t=>n-t<2000);taps.push(n);if(taps.length>=3){taps=[];catSay('slap','judge',{},true)}};
+  addEventListener('pointermove',e=>{
+    const c=$('#cat');if(!c||!c.offsetParent)return;
+    const r=c.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height*.35),d=Math.hypot(dx,dy)||1,k=Math.min(1,d/150)*2.5;
+    c.querySelectorAll('.pup').forEach(p=>p.style.transform=`translate(${dx/d*k}px,${dy/d*k}px)`);
+  });
+  setTimeout(()=>{if(S.lastAdd!==day())$('#addb').classList.add('pulse')},5000);
+  catGreet();
+}
+
+function parse(){
+  words=[];const raw=cur.b.split('\n');
+  const hasBlank=raw.some((l,i)=>!l.trim()&&raw.slice(0,i).some(x=>x.trim())&&raw.slice(i+1).some(x=>x.trim()));
+  let li=-1,pi=0,any=false;
+  raw.forEach(l=>{l=l.trim();if(!l){if(any)pi++;any=false;return}li++;any=true;l.split(/\s+/).forEach(w=>words.push({w,li,pi:hasBlank?pi:Math.floor(li/4)}))});
+}
+function build(){
+  const m=S.chunk;chunks=[];if(!words.length)return;
+  if(m==='line'||m==='para'){const k=m==='line'?'li':'pi';let s=0;for(let i=1;i<=words.length;i++)if(i===words.length||words[i][k]!==words[s][k]){chunks.push([s,i-1]);s=i}}
+  else if(m==='sent'){let s=0;words.forEach((x,i)=>{if(/[.!?…]["»”)]*$/.test(x.w)||i===words.length-1){chunks.push([s,i]);s=i+1}})}
+  else{const n=+m||3;for(let i=0;i<words.length;i+=n)chunks.push([i,Math.min(i+n-1,words.length-1)])}
+}
+const ctext=i=>words.slice(chunks[i][0],chunks[i][1]+1).map(x=>x.w).join(' ');
+const hardSet=()=>new Set(S.hard[cur.id]||[]);
+const visible=i=>!(mode==='learn'&&onlyHard)||hardSet().has(words[i].li);
+function hidden(i){if(reveal.has(i))return false;const h=(i*37+11)%100;return level===1?h<30:level===2?true:level===3?h<70:level>=4}
+
+function open(id){
+  cur=[...LIB,...S.texts].find(x=>x.id===id);if(!cur)return;S.lastOpen=id;save();stop();
+  parse();onlyHard=false;level=1;
+  $('#ttl').textContent=cur.t;$('#home').classList.add('hide');$('#play').classList.remove('hide');
+  window.scrollTo(0,0);setMode('echo');
+}
+function setMode(m){
+  stop();mode=m;idx=0;shown=false;radioDone=false;reveal.clear();build();
+  document.querySelectorAll('#modes button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
+  $('#desc').textContent=DESC[m];$('#ctl').classList.toggle('hide',m==='learn');$('#lctl').classList.toggle('hide',m!=='learn');
+  learnInfo();render();syncLock();armHint();
+}
+function learnInfo(){setSt('idle',mode==='learn'?'Ступень '+(level+1)+' из 5: '+LV[level]:(micDead||!SR?'Нажми на микрофон. Распознавание речи недоступно — повторяй вслух и жми ⏭':'Нажми на микрофон'))}
+
+function render(scroll){
+  const learn=mode==='learn',c=chunks[Math.min(idx,chunks.length-1)]||[0,0],hard=hardSet();
+  let h='',curLine=-1,prevPi=-1,open=false;
+  const flag=li=>learn?`<button class="flag${hard.has(li)?' on':''}" data-l="${li}" aria-label="Отметить сложную строку">⚑</button>`:'';
+  words.forEach((x,i)=>{
+    if(learn&&onlyHard&&!hard.has(x.li))return;
+    if(x.li!==curLine){if(open)h+=flag(curLine)+'</span>';h+=`<span class="ln${prevPi!==-1&&x.pi!==prevPi?' pg':''}">`;curLine=x.li;open=true}
+    prevPi=x.pi;let cl='w',inner=esc(x.w);
+    if(learn){if(hidden(i)){if(level===2){cl+=' fl';const f=Array.from(x.w);inner='<b>'+esc(f[0])+'</b>'+esc(f.slice(1).join(''))}else cl+=' hid'}}
+    else if(playing||idx>0){if(i<c[0])cl+=' done';else if(i<=c[1])cl+=' cur'+(shown||mode!=='prompt'?' shown':'');else cl+=' fut'}
+    h+=`<span class="${cl}" data-i="${i}">${inner}</span> `;
+  });
+  if(open)h+=flag(curLine)+'</span>';
+  if(learn&&onlyHard&&!h)h='<div class="empty">Сложных строк пока нет. Выключи фильтр и отметь нужные строки значком ⚑.</div>';
+  const t=$('#txt');t.innerHTML=h;t.classList.toggle('blind',mode==='prompt'&&playing);
+  $('#honly').classList.toggle('on',onlyHard);$('#honly').textContent='⚑ Сложные'+(hard.size?' ('+hard.size+')':'');
+  if(scroll){const e=t.querySelector('.w.cur');if(e)e.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'})}
+}
+
+function norm(s){return s.toLowerCase().replace(/ё/g,'е').replace(/[^а-яa-z0-9\s]/g,' ').split(/\s+/).filter(Boolean)}
+function score(t,said){const a=norm(t),b=new Set(norm(said));return a.length?a.filter(w=>b.has(w)).length/a.length:0}
+function say(t){
+  return new Promise(r=>{
+    if(!('speechSynthesis' in window))return r();
+    let d=false;const f=()=>{if(!d){d=true;clearTimeout(tm);r()}};
+    const tm=setTimeout(f,(t.split(/\s+/).length*600+3500)/S.rate);
+    try{speechSynthesis.cancel()}catch(e){}
+    setTimeout(()=>{
+      try{const u=new SpeechSynthesisUtterance(t);u.lang='ru-RU';u.rate=+S.rate;
+        const v=speechSynthesis.getVoices().find(v=>v.lang&&v.lang.toLowerCase().startsWith('ru'));if(v)u.voice=v;
+        u.onend=f;u.onerror=f;speechSynthesis.speak(u)}catch(e){f()}
+    },60);
+  });
+}
+function stopRec(){clearTimeout(hintT);clearTimeout(maxT);if(rec){try{rec.onend=null;rec.onresult=null;rec.onerror=null;rec.abort()}catch(e){}}rec=null;$('#mic').classList.remove('live')}
+function listen(text,my,hintMs,maxMs){
+  return new Promise(res=>{
+    if(my!==run)return;
+    if(!SR||micDead){setSt('wait','Микрофон недоступен — повтори вслух и жми ⏭');return res('dead')}
+    let done=false;const fin=v=>{if(done)return;done=true;stopRec();res(v)};
+    const armHintT=()=>{if(hintMs){clearTimeout(hintT);hintT=setTimeout(()=>fin('hint'),hintMs)}};
+    setSt('listen','Слушаю… говори');$('#mic').classList.add('live');
+    rec=new SR();rec.lang='ru-RU';rec.continuous=true;rec.interimResults=true;
+    rec.onresult=e=>{let t='';for(const r of e.results)t+=r[0].transcript+' ';setSt('listen','Слышу: «'+t.trim()+'»');if(score(text,t)>=.6)fin('ok');else armHintT()};
+    rec.onerror=e=>{if(e.error==='no-speech'||e.error==='aborted')return;micDead=true;
+      setSt('err',(e.error==='not-allowed'||e.error==='service-not-allowed')?'Нет доступа к микрофону. Разреши его в настройках сайта. Пока жми ⏭':'Сбой распознавания ('+e.error+'). Повторяй вслух и жми ⏭');fin('dead')};
+    rec.onend=()=>{if(!done&&my===run)setTimeout(()=>{if(!done&&my===run){try{rec.start()}catch(_){}}},150)};
+    try{rec.start()}catch(_){}
+    armHintT();
+    if(maxMs)maxT=setTimeout(()=>fin('timeout'),maxMs);
+  });
+}
+
+async function go(){
+  const my=++run;playing=true;$('#mic').textContent='⏸';$('#mic').setAttribute('aria-label','Пауза');syncLock();
+  while(my===run){
+    if(idx>=chunks.length){
+      if(mode==='radio'){if(!radioDone){radioDone=true;finish(40,true)}idx=0;await sleep(2000);continue}
+      break;
+    }
+    const t=ctext(idx);shown=false;render(true);
+    if(mode==='echo'){
+      let ok=false;
+      for(let a=0;a<2&&!ok&&my===run;a++){
+        setSt('say',a?'Ещё раз…':'Слушай…');await say(t);if(my!==run)return;
+        if(!S.rep){await sleep(500);ok=true;break}
+        const r=await listen(t,my,0,18000);if(my!==run)return;
+        if(r==='ok'){ok=true;setSt('listen','Верно ✓');await sleep(350)}
+        else if(r==='dead')await never();
+        else setSt('wait','Не расслышал — повторяю…');
+      }
+      if(!ok&&my===run){setSt('wait','Не расслышал — иду дальше');await sleep(900)}
+    }else if(mode==='prompt'){
+      const r=await listen(t,my,S.pause*1000,0);if(my!==run)return;
+      if(r==='dead')await never();
+      if(r==='hint'){shown=true;render(true);setSt('say','Подсказка');await say(t);if(my!==run)return;
+        const r2=await listen(t,my,0,20000);if(my!==run)return;if(r2==='dead')await never()}
+    }else{
+      setSt('say','Читаю…');await say(t);await sleep(700/+S.rate);
+    }
+    if(my!==run)return;
+    idx++;
+  }
+  if(my===run){stop();finish(mode==='echo'?40:80)}
+}
+function stop(){
+  run++;playing=false;stopRec();try{speechSynthesis.cancel()}catch(e){}
+  $('#mic').textContent='🎙';$('#mic').setAttribute('aria-label','Старт');syncLock();
+}
+function nav(d){
+  const was=playing;stop();idx=Math.max(0,Math.min(chunks.length-1,idx+d));shown=false;render(true);
+  if(was)go();else setSt('idle','Кусок '+(idx+1)+' из '+chunks.length);
+}
+function finish(p,quiet){
+  S.prog[cur.id]=Math.max(S.prog[cur.id]||0,p);S.lastp[cur.id]=Date.now();
+  const t=day();if(S.last!==t){S.streak=S.last===day(Date.now()-864e5)?S.streak+1:1;S.last=t;if(!S.days.includes(t))S.days.push(t)}
+  if(S.streak>(S.best||0)&&S.streak>=2){S.best=S.streak;S.react='record'}else if(S.prog[cur.id]>=100)S.react='learned';
+  save();home();toast('Огонёк горит: '+plural(S.streak));
+  if(!quiet){idx=0;shown=false;render();setSt('listen','Готово! 🔥 Серия: '+plural(S.streak))}
+}
+
+async function lock(on){try{if(on&&'wakeLock' in navigator&&!wl){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>{wl=null})}else if(!on&&wl){const w=wl;wl=null;await w.release()}}catch(e){wl=null}}
+function wantLock(){return !$('#play').classList.contains('hide')&&(playing||mode==='learn')}
+function syncLock(){lock(wantLock())}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncLock()});
+
+function revealNext(){
+  for(let i=0;i<words.length;i++)if(visible(i)&&hidden(i)){reveal.add(i);render();break}
+  armHint();
+}
+function armHint(){clearTimeout(learnT);if(mode==='learn'&&S.autoHint&&!$('#play').classList.contains('hide'))learnT=setTimeout(revealNext,S.pause*1000)}
+
+$('#list').onclick=e=>{
+  const d=e.target.closest('[data-del]'),ed=e.target.closest('[data-edit]');
+  if(d){if(confirm('Удалить этот текст?')){const id=d.dataset.del;S.texts=S.texts.filter(x=>x.id!==id);delete S.prog[id];delete S.hard[id];save();home()}return}
+  if(ed){openEditor(ed.dataset.edit);return}
+  const i=e.target.closest('.item');if(i)open(i.dataset.id);
+};
+$('#list').onkeydown=e=>{if(e.key==='Enter'&&e.target.classList.contains('item'))open(e.target.dataset.id)};
+$('#back').onclick=()=>{stop();clearTimeout(learnT);$('#play').classList.add('hide');$('#home').classList.remove('hide');syncLock();home();catGreet()};
+$('#modes').onclick=e=>{const b=e.target.closest('button');if(b)setMode(b.dataset.m)};
+$('#mic').onclick=()=>{if(playing)stop(),learnInfo();else{micDead=false;go()}};
+$('#next').onclick=()=>nav(1);$('#prev').onclick=()=>nav(-1);$('#rep').onclick=()=>nav(0);
+$('#txt').onclick=e=>{
+  const f=e.target.closest('.flag');
+  if(f){const li=+f.dataset.l,a=new Set(S.hard[cur.id]||[]);a.has(li)?a.delete(li):a.add(li);S.hard[cur.id]=[...a];save();render();return}
+  const w=e.target.closest('.hid,.fl');if(w){reveal.add(+w.dataset.i);render();armHint()}
+};
+function lvl(d){level=Math.max(0,Math.min(4,level+d));reveal.clear();learnInfo();render();armHint()}
+$('#hard').onclick=()=>lvl(1);$('#easy').onclick=()=>lvl(-1);$('#hint').onclick=revealNext;
+$('#honly').onclick=()=>{onlyHard=!onlyHard;reveal.clear();render()};
+$('#learned').onclick=()=>finish(level>=3?100:70);
+
+$('#setb').onclick=()=>{
+  $('#rate').value=S.rate;$('#chunk').value=S.chunk;$('#pause').value=S.pause;$('#repeat').checked=S.rep;$('#auto').checked=S.autoHint;$('#mild').checked=S.mild;
+  $('#r1').classList.toggle('hide',$('#play').classList.contains('hide'));$('#set').classList.remove('hide');
+};
+$('#setx').onclick=()=>{
+  S.rate=+$('#rate').value;S.chunk=$('#chunk').value;S.pause=+$('#pause').value;S.rep=$('#repeat').checked;S.autoHint=$('#auto').checked;S.mild=$('#mild').checked;
+  save();$('#set').classList.add('hide');if(cur&&!$('#play').classList.contains('hide'))setMode(mode);
+};
+$('#r1').onclick=()=>{if(cur&&confirm('Сбросить прогресс этого текста?')){delete S.prog[cur.id];delete S.hard[cur.id];save();home();render();toast('Прогресс текста сброшен')}};
+$('#rall').onclick=()=>{if(confirm('Сбросить весь прогресс и серию? Свои тексты останутся.')){S.prog={};S.hard={};S.lastp={};S.best=0;S.react='';S.streak=0;S.last='';S.days=[];save();home();if(cur&&!$('#play').classList.contains('hide'))render();toast('Прогресс сброшен')}};
+
+function openEditor(id){
+  editId=id||null;const x=id?S.texts.find(t=>t.id===id):null;
+  $('#nh').textContent=x?'Изменить текст':'Свой текст';$('#nt').value=x?x.t:'';$('#nb').value=x?x.b:'';$('#new').classList.remove('hide');$('#nd').classList.toggle('hide',!x);
+}
+$('#nd').onclick=()=>{if(editId&&confirm('Удалить этот текст?')){S.texts=S.texts.filter(x=>x.id!==editId);delete S.prog[editId];delete S.hard[editId];delete S.lastp[editId];save();$('#new').classList.add('hide');home()}};
+$('#addb').onclick=()=>openEditor();
+$('#nx').onclick=()=>$('#new').classList.add('hide');
+$('#ns').onclick=()=>{
+  const t=$('#nt').value.trim()||'Мой текст',b=$('#nb').value.trim();if(!b){toast('Вставь текст');return}
+  if(editId){const x=S.texts.find(q=>q.id===editId);if(x){x.t=t;if(x.b!==b){x.b=b;delete S.hard[x.id]}}}
+  else{S.texts.push({id:'c'+Date.now(),t,b,c:1});S.lastAdd=day();$('#addb').classList.remove('pulse')}
+  save();$('#new').classList.add('hide');home();
+};
+if('speechSynthesis' in window)speechSynthesis.getVoices();
+home();catInit();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
